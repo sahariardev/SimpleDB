@@ -50,7 +50,7 @@ public class WAL {
         return lsn;
     }
 
-    public synchronized long logBegin(long txnId, String key, String oldValue) {
+    public synchronized long logBegin(long txnId) {
         lsn++;
         writer.println(lsn + "|" + txnId + "BEGIN" + "|||");
         writer.flush();

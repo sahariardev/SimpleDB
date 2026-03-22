@@ -1,6 +1,5 @@
 package org.simpledb;
 
-import java.nio.ByteBuffer;
 import java.util.*;
 
 public class Page {
@@ -28,6 +27,7 @@ public class Page {
             String oldValue = entries.get(key);
             usedBytes -= (4 + oldValue.length() + 4 + key.length());
         }
+
 
         if (usedBytes + entrySize > PAGE_SIZE) {
             return false;
