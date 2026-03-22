@@ -57,12 +57,20 @@ public class BPlusTree {
         leaf.pageIds.add(pos, pageId);
 
         if (leaf.keys.size() > ORDER) {
-            //split
+            splitLeafNode(leaf);
         }
     }
-    //put
-    //remove
-    //range
+
+    public void remove(String key) {
+        LeafNode leaf = findLeaf(key);
+        for (int i = 0; i < leaf.keys.size(); i++) {
+            if (leaf.keys.get(i).equals(key)) {
+                leaf.keys.remove(i);
+                leaf.pageIds.remove(i);
+                return;
+            }
+        }
+    }
 
     private LeafNode findLeaf(String key) {
         Node current = root;
@@ -78,5 +86,79 @@ public class BPlusTree {
         }
 
         return (LeafNode) current;
+    }
+
+    private void splitLeafNode(LeafNode left) {
+        int mid = left.keys.size() / 2;
+
+        LeafNode right = new LeafNode();
+        right.keys.addAll(left.keys.subList(mid, left.keys.size()));
+        right.pageIds.addAll(left.pageIds.subList(mid, left.keys.size()));
+
+        right.next = left.next;
+        left.next = right;
+
+        left.keys.subList(mid, left.keys.size()).clear();
+        left.pageIds.subList(mid, left.keys.size()).clear();
+
+        String promotedKey = right.keys.getFirst();
+        insertIntoParent(left, promotedKey, right);
+    }
+
+    private void insertIntoParent(Node left, String key, Node right) {
+        if (left == root) {
+            InternalNode root = new InternalNode();
+            root.keys.add(key);
+            root.children.add(left);
+            root.children.add(right);
+            this.root = root;
+            return;
+        }
+
+        InternalNode parent = findParent(root, left);
+        int indexOfLeft = parent.children.indexOf(left);
+
+        parent.children.set(indexOfLeft + 1, right);
+        parent.keys.add(indexOfLeft, key);
+
+        if (parent.keys.size() > ORDER) {
+            splitInternalNode(parent);
+        }
+    }
+
+    private void splitInternalNode(InternalNode node) {
+        int mid = node.keys.size() / 2;
+        String promotedKey = node.keys.get(mid);
+
+        InternalNode newNode = new InternalNode();
+        newNode.keys.addAll(node.keys.subList(mid + 1, node.keys.size()));
+        newNode.children.addAll(node.children.subList(mid + 1, node.children.size()));
+
+        node.keys.subList(mid, node.keys.size()).clear();
+        node.children.subList(mid + 1, node.children.size()).clear();
+
+        insertIntoParent(node, promotedKey, newNode);
+    }
+
+    private InternalNode findParent(Node current, Node child) {
+        if (!(current instanceof LeafNode)) {
+            return null;
+        }
+
+        InternalNode parent = (InternalNode) current;
+
+        for (Node c : parent.children) {
+            if (c == child) {
+                return parent;
+            }
+
+            InternalNode childParent = findParent(c, child);
+
+            if (childParent != null) {
+                return childParent;
+            }
+        }
+
+        return null;
     }
 }
