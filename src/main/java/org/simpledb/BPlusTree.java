@@ -27,12 +27,7 @@ public class BPlusTree {
     }
 
     public int get(String key) {
-        LeafNode leaf = (LeafNode) findLeaf(key);
-
-        if (leaf == null) {
-            return -1;
-        }
-
+        LeafNode leaf = findLeaf(key);
         for (int i = 0; i < leaf.pageIds.size(); i++) {
             if (leaf.keys.get(i).equals(key)) {
                 return leaf.pageIds.get(i);
@@ -40,6 +35,30 @@ public class BPlusTree {
         }
 
         return -1;
+    }
+
+    public void put(String key, int pageId) {
+        LeafNode leaf = findLeaf(key);
+
+        for (int i = 0; i < leaf.keys.size(); i++) {
+            if (leaf.keys.get(i).equals(key)) {
+                leaf.pageIds.set(i, pageId);
+                return;
+            }
+        }
+
+        int pos = 0;
+
+        while (pos < leaf.keys.size() && key.compareTo(leaf.keys.get(pos)) >= 0) {
+            pos++;
+        }
+
+        leaf.keys.add(pos, key);
+        leaf.pageIds.add(pos, pageId);
+
+        if (leaf.keys.size() > ORDER) {
+            //split
+        }
     }
     //put
     //remove
@@ -53,10 +72,6 @@ public class BPlusTree {
 
             while (i < internalNode.keys.size() && key.compareTo(internalNode.keys.get(i)) >= 0) {
                 i++;
-            }
-
-            if (i == internalNode.keys.size()) {
-                return null;
             }
 
             current = internalNode.children.get(i);
