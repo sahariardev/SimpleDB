@@ -97,8 +97,10 @@ public class SimpleDB {
         record.newValue = value;
         activeTxnWrites.add(record);
 
-        putInternal(record.key, oldValue);
-        commit();
+        putInternal(record.key, value);
+        if (autoCommit) {
+            commit();
+        }
     }
 
     public String get(String key) throws IOException {
