@@ -1,5 +1,6 @@
 package org.simpledb;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -70,6 +71,52 @@ public class BPlusTree {
                 return;
             }
         }
+    }
+
+    public void saveToFile(String path, int nextPageId) throws IOException {
+        try (PrintWriter pw = new PrintWriter(new FileWriter(path))) {
+            pw.println("NEXTPAGEID:" + nextPageId);
+            LeafNode leaf = findLeaf("");
+
+            while (leaf != null) {
+                for (int i = 0; i < leaf.keys.size(); i++) {
+                    pw.println(leaf.keys.get(i) + "=" + leaf.pageIds.get(i));
+                }
+
+                leaf = (LeafNode) leaf.next;
+            }
+        }
+    }
+
+    public int loadFromFile(String path) throws IOException {
+        this.root = new LeafNode();
+        File f = new File(path);
+
+        if (!f.exists()) {
+            return 0;
+        }
+
+        int nextPageId = 0;
+
+        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+            String line = br.readLine();
+            //todo:: extract NEXTPAGEID into a constant
+            if (line != null && line.startsWith("NEXTPAGEID:")) {
+                nextPageId = Integer.parseInt(line.substring("NEXTPAGEID:".length()));
+            }
+
+            while ((line = br.readLine()) != null) {
+                int eq = line.indexOf('=');
+
+                if (eq > 0) {
+                    String key = line.substring(0, eq);
+                    int pageId = Integer.parseInt(line.substring(eq + 1));
+                    put(key, pageId);
+                }
+            }
+        }
+
+        return nextPageId;
     }
 
     private LeafNode findLeaf(String key) {
